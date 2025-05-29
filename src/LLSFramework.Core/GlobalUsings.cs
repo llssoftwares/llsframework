@@ -1,0 +1,10 @@
+﻿global using LLSFramework.Core.DDD;
+global using LLSFramework.Core.Extensions;
+global using LLSFramework.Core.Pagination;
+global using System.Collections;
+global using System.ComponentModel;
+global using System.Globalization;
+global using System.Linq.Expressions;
+global using System.Reflection;
+global using System.Text.RegularExpressions;
+global using System.Web;
