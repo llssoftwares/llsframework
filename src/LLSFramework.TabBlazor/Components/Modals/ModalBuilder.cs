@@ -1,8 +1,16 @@
 ﻿namespace LLSFramework.TabBlazor.Components.Modals;
 
+/// <summary>
+/// Builder class for configuring and displaying a modal dialog containing a custom Blazor component.
+/// Supports fluent configuration of modal options and component parameters.
+/// </summary>
+/// <typeparam name="TComponent">The Blazor component type to render inside the modal. Must implement <see cref="IComponent"/>.</typeparam>
 public class ModalBuilder<TComponent>(IModalService modalService) where TComponent : IComponent
 {
+    // Holds the component and its parameters to be rendered in the modal.
     private readonly RenderComponent<TComponent> _renderComponent = new();
+
+    // Modal configuration fields with their default values.
     private string? _title = null;
     private ModalSize _size = ModalSize.Medium;
     private ModalVerticalPosition _verticalPosition = ModalVerticalPosition.Centered;
@@ -19,6 +27,13 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
     private ModalFullscreen _fullscreen;
     private TablerColor? _statusColor;
 
+    /// <summary>
+    /// Sets a parameter value for the component rendered in the modal.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the parameter.</typeparam>
+    /// <param name="parameterSelector">An expression selecting the parameter property.</param>
+    /// <param name="value">The value to set.</param>
+    /// <returns>The builder instance for chaining.</returns>
     public ModalBuilder<TComponent> Set<TValue>(Expression<Func<TComponent, TValue>> parameterSelector, TValue value)
     {
         if (value != null)
@@ -27,6 +42,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets the modal title.
+    /// </summary>
     public ModalBuilder<TComponent> Title(string title)
     {
         _title = title;
@@ -34,6 +52,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets the modal size.
+    /// </summary>
     public ModalBuilder<TComponent> Size(ModalSize size)
     {
         _size = size;
@@ -41,6 +62,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets the vertical position of the modal.
+    /// </summary>
     public ModalBuilder<TComponent> VerticalPosition(ModalVerticalPosition verticalPosition)
     {
         _verticalPosition = verticalPosition;
@@ -48,6 +72,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether to show the modal header.
+    /// </summary>
     public ModalBuilder<TComponent> ShowHeader(bool showHeader)
     {
         _showHeader = showHeader;
@@ -55,6 +82,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether to show the close button in the modal header.
+    /// </summary>
     public ModalBuilder<TComponent> ShowCloseButton(bool showCloseButton)
     {
         _showCloseButton = showCloseButton;
@@ -62,6 +92,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether the modal body is scrollable.
+    /// </summary>
     public ModalBuilder<TComponent> Scrollable(bool scrollable)
     {
         _scrollable = scrollable;
@@ -69,6 +102,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether clicking outside the modal closes it.
+    /// </summary>
     public ModalBuilder<TComponent> CloseOnClickOutside(bool closeOnClickOutside)
     {
         _closeOnClickOutside = closeOnClickOutside;
@@ -76,6 +112,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether the background is blurred when the modal is open.
+    /// </summary>
     public ModalBuilder<TComponent> BlurBackground(bool blurBackground)
     {
         _blurBackground = blurBackground;
@@ -83,6 +122,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether to show a backdrop behind the modal.
+    /// </summary>
     public ModalBuilder<TComponent> Backdrop(bool backdrop)
     {
         _backdrop = backdrop;
@@ -90,6 +132,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether pressing the Escape key closes the modal.
+    /// </summary>
     public ModalBuilder<TComponent> CloseOnEsc(bool closeOnEsc)
     {
         _closeOnEsc = closeOnEsc;
@@ -97,6 +142,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets whether the modal is draggable.
+    /// </summary>
     public ModalBuilder<TComponent> Draggable(bool draggable)
     {
         _draggable = draggable;
@@ -104,6 +152,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets a custom CSS class for the modal container.
+    /// </summary>
     public ModalBuilder<TComponent> CssClass(string modalCssClass)
     {
         _modalCssClass = modalCssClass;
@@ -111,6 +162,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets a custom CSS class for the modal body.
+    /// </summary>
     public ModalBuilder<TComponent> BodyCssClass(string modalBodyCssClass)
     {
         _modalBodyCssClass = modalBodyCssClass;
@@ -118,6 +172,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets the modal to fullscreen mode.
+    /// </summary>
     public ModalBuilder<TComponent> Fullscreen(ModalFullscreen fullscreen)
     {
         _fullscreen = fullscreen;
@@ -125,6 +182,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets the status color (e.g., for header or border) of the modal.
+    /// </summary>
     public ModalBuilder<TComponent> StatusColor(TablerColor statusColor)
     {
         _statusColor = statusColor;
@@ -132,6 +192,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Sets the modal status color to "Danger" (typically red).
+    /// </summary>
     public ModalBuilder<TComponent> Danger()
     {
         _statusColor = TablerColor.Danger;
@@ -139,6 +202,9 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Configures the modal for a compact appearance (small size, no header or close button).
+    /// </summary>
     public ModalBuilder<TComponent> Compact()
     {
         _size = ModalSize.Small;
@@ -148,6 +214,12 @@ public class ModalBuilder<TComponent>(IModalService modalService) where TCompone
         return this;
     }
 
+    /// <summary>
+    /// Shows the modal asynchronously with the configured options and returns the modal result.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="ModalResult"/> containing the result data and cancellation status.
+    /// </returns>
     public async Task<ModalResult> ShowAsync()
     {
         return await modalService.ShowAsync(_title, _renderComponent, new ModalOptions
