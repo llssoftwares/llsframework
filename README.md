@@ -57,7 +57,7 @@ This library provides core application services for .NET 9 solutions, focusing o
 
 ## LLSFramework.TabBlazor
 
-A Blazor component library that extends Tabler and TabBlazor features, providing advanced UI features, real-time communication, and modal/dialog management.
+A Blazor component library that extends Tabler and TabBlazor, offering advanced UI components, real-time communication, modal and dialog management, dynamic pagination, loading states, lookup controls, form components, and more.
 
 ### Key Features
 
