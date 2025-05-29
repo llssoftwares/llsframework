@@ -1,0 +1,196 @@
+﻿@inject UrlManager UrlManager
+@inject LoadingState LoadingState
+
+<div class="card-footer d-flex align-items-center py-2">
+    @if (ShowTotalResults)
+    {
+        <p class="m-0 text-secondary fs-5 d-none d-sm-block">
+            @if (TotalResults > 1)
+            {
+                <span>Mostrando de <span>@_firstItemShowing</span> a <span>@_lastItemShowing</span> de <span>@TotalResults</span> itens encontrados</span>
+            }
+            else if (TotalResults == 1)
+            {
+                <span>1 item encontrado</span>
+            }
+            else if (LoadingState.IsLoading)
+            {
+                <span>Carregando...</span>
+            }
+            else if (!_firstRender)
+            {                
+                <span>Nenhum item encontrado</span>                
+            }
+        </p>
+    }
+    <ul class="pagination m-0 ms-auto">
+        <li class="page-item @(_canGoBack ? "cursor-pointer" : "disabled")">
+            <span class="page-link" @onclick="GoFirstAsync">
+                <Icon IconType="@MDIcons.Chevron_double_left" Size="22"></Icon>
+            </span>
+        </li>
+        <li class="page-item @(_canGoBack ? "cursor-pointer" : "disabled")">
+            <span class="page-link" @onclick="GoPreviousAsync">
+                <Icon IconType="@MDIcons.Chevron_left" Size="22"></Icon>
+            </span>
+        </li>
+
+        @if (Compact)
+        {
+            <li class="page-item cursor-pointer">
+                <span class="page-link">@(_currentPage)</span>
+            </li>
+        }
+        else
+        {
+            foreach (var page in GeneratePages())
+            {
+                if (page > 0)
+                {
+                    <li class="page-item cursor-pointer @(page == _currentPage ? "active" : "")">
+                        <span class="page-link" @onclick="@(() => GoToPageAsync(page))">@(page)</span>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <Icon IconType="@TablerIcons.Dots" Size="22"></Icon>
+                        </span>
+                    </li>
+                }
+            }
+        }
+
+        <li class="page-item @(_canGoForwards ? "cursor-pointer" : "disabled")">
+            <span class="page-link" @onclick="GoNextAsync">
+                <Icon IconType="@MDIcons.Chevron_right" Size="22"></Icon>
+            </span>
+        </li>
+        <li class="page-item @(_canGoForwards ? "cursor-pointer" : "disabled")">
+            <span class="page-link" @onclick="GoLastAsync">
+                <Icon IconType="@MDIcons.Chevron_double_right" Size="22"></Icon>
+            </span>
+        </li>
+    </ul>
+</div>
+
+@code {
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    [Parameter]
+    public bool ShowTotalResults { get; set; } = true;
+
+    [Parameter]
+    public int PageSize { get; set; }
+
+    [Parameter]
+    public int TotalResults { get; set; }
+
+    [Parameter]
+    public bool HandleUrl { get; set; } = true;
+
+    [Parameter]
+    public EventCallback<int> OnCurrentPageChanged { get; set; }
+
+    private int _firstItemShowing => PageSize * _currentPage - PageSize + 1;
+
+    private int _lastItemShowing => PageSize * _currentPage >= TotalResults
+        ? TotalResults
+        : PageSize * _currentPage;
+
+    private int _currentPage { get; set; } = 1;
+
+    private int _total => (int)Math.Ceiling((decimal)TotalResults / PageSize);
+
+    private bool _canGoBack => _currentPage > 1;
+
+    private bool _canGoForwards => _currentPage < _total;
+
+    private bool _firstRender;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        _firstRender = firstRender;        
+    }
+
+    public async Task GoToPageAsync(int pageNumber)
+    {
+        _currentPage = pageNumber;
+
+        if (HandleUrl && UrlManager != null)
+        {
+            if (pageNumber > 1)
+            {
+                await UrlManager.AddParametersAsync(("p", pageNumber));
+            }
+            else
+            {
+                await UrlManager.RemoveParametersAsync("p");
+            }
+        }
+
+        await OnCurrentPageChanged.InvokeAsync(pageNumber);
+    }
+
+    private Task GoFirstAsync()
+    {
+        return !_canGoBack ? Task.CompletedTask : GoToPageAsync(1);
+    }
+
+    private Task GoPreviousAsync()
+    {
+        return !_canGoBack ? Task.CompletedTask : GoToPageAsync(_currentPage - 1);
+    }
+
+    private Task GoNextAsync()
+    {
+        return !_canGoForwards ? Task.CompletedTask : GoToPageAsync(_currentPage + 1);
+    }
+
+    private Task GoLastAsync()
+    {
+        return !_canGoForwards ? Task.CompletedTask : GoToPageAsync(_total);
+    }
+
+    private List<int> GeneratePages()
+    {
+        var result = new List<int> { 1 };
+
+        if (_total == 1) return result;
+
+        var center = new List<int> { _currentPage - 2, _currentPage - 1, _currentPage, _currentPage + 1, _currentPage + 2 };
+        var filteredCenter = center.FindAll(p => p > 1 && p < _total);
+        bool includeThreeLeft = _currentPage == 5;
+        bool includeThreeRight = _currentPage == _total - 4;
+        bool includeLeftDots = _currentPage > 5;
+        bool includeRightDots = _currentPage < _total - 4;
+
+        if (includeThreeLeft)
+        {
+            filteredCenter.Insert(0, 2);
+        }
+
+        if (includeThreeRight)
+        {
+            filteredCenter.Add(_total - 1);
+        }
+
+        if (includeLeftDots)
+        {
+            filteredCenter.Insert(0, -1);
+        }
+
+        if (includeRightDots)
+        {
+            filteredCenter.Add(-1);
+        }
+
+        result.AddRange(filteredCenter);
+        result.Add(_total);
+
+        return result;
+    }
+}

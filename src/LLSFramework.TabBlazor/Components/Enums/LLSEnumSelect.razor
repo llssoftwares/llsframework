@@ -1,0 +1,24 @@
+﻿@typeparam TValue
+@inherits InputBase<TValue>
+
+<InputSelect class="@CssClass" @bind-Value="CurrentValue">
+    @if (IsNullable)
+    {
+        <option value="">@EmptyText</option>
+    }
+    @foreach (var item in EnumExtensions.ToTupleList<TValue>())
+    {
+        <option value="@item.Value">@item.Description</option>
+    }
+</InputSelect>
+
+@code {
+    [Parameter] public string? EmptyText { get; set; }
+
+    private bool IsNullable => Nullable.GetUnderlyingType(typeof(TValue)) != null;
+
+    protected override bool TryParseValueFromString(string? value, out TValue result, out string validationErrorMessage)
+    {
+        throw new NotImplementedException();
+    }
+}

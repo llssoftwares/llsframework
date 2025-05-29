@@ -1,0 +1,370 @@
+﻿@typeparam TItem
+@inject IModalService ModalService
+@inject UrlManager UrlManager
+@inject ToastService ToastService
+@inject LoadingState LoadingState
+
+<div class="card">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="card-header">
+            <h3 class="card-title">@Title</h3>
+        </div>
+    }
+    @if (HasPageSizeSelector)
+    {
+        <div class="card-body border-bottom py-2">
+            <div class="d-flex">
+                <div class="text-secondary fs-5">
+                    Mostrar
+                    <div class="mx-2 d-inline-block">
+                        <InputSelect class="form-select fs-5" @bind-Value="_pageSize" @oninput="OnPageSizeChangedAsync">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </InputSelect>
+                    </div>
+                    itens por página
+                </div>
+            </div>
+        </div>
+    }
+    <Dimmer Active="LoadingState.IsLoading">
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter text-nowrap datatable">
+                <thead>
+                    <tr>
+                        @if (HasCheckboxes)
+                        {
+                            <th class="w-1">
+                                <CheckboxTriState Value="GetSelectAllValue()" ValueChanged="ToggleSelectAll" />
+                            </th>
+                        }
+
+                        @if (HeaderTemplate != null)
+                        {
+                            @HeaderTemplate
+                        }
+                        else
+                        {
+                            foreach (var header in _headers)
+                            {
+                                <LLSTableHeader HandleUrl="HandleUrl"
+                                ColumnName="@header.name"
+                                ColumnText="@header.text"
+                                CurrentSortColumn="@_currentSortColumn"
+                                CurrentSortDirection="@_currentSortDirection"
+                                OnSortColumnChanged="OnSortColumnChangedAsync" />
+                            }
+                        }
+
+                        @if (RowActions is not null)
+                        {
+                            if (HeaderActionTemplate is not null)
+                            {
+                                <th class="text-end">
+                                    @HeaderActionTemplate
+                                </th>
+                            }
+                            else
+                            {
+                                <th></th>
+                            }
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (PaginatedResult?.List != null)
+                    {
+                        foreach (var item in PaginatedResult.List)
+                        {
+                            <tr>
+                                @if (HasCheckboxes)
+                                {
+                                    <td>
+                                        <Checkbox Value="IsItemSelected(item)" ValueChanged="@(() => ToggleSelectItem(item))" />
+                                    </td>
+                                }
+                                @if (RowTemplate is not null)
+                                {
+                                    @RowTemplate(item)
+                                }
+                                @if (RowActions is not null)
+                                {
+                                    <td class="text-end">
+                                        @RowActions(item)
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </Dimmer>
+
+    <MediaQuery Media="@Breakpoints.SmallDown" @bind-Matches="_isSmall" />
+
+    <LLSPagination HandleUrl="HandleUrl" ShowTotalResults="ShowTotalResults" Compact="_isSmall" @ref="_pagination" PageSize="_pageSize" TotalResults="PaginatedResult?.Total ?? 0" OnCurrentPageChanged="OnCurrentPageChangedAsync" />
+</div>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public bool HasCheckboxes { get; set; }
+
+    [Parameter]
+    public bool HasPageSizeSelector { get; set; } = true;
+
+    [Parameter]
+    public bool ShowTotalResults { get; set; } = true;
+
+    [Parameter]
+    public bool HandleUrl { get; set; } = true;
+
+    [Parameter]
+    public string? DefaultSortColumn { get; set; }
+
+    [Parameter]
+    public SortDirection DefaultDirection { get; set; }
+
+    [Parameter]
+    public RenderFragment? HeaderTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment? HeaderActionTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? RowTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? RowActions { get; set; }
+
+    [Parameter]
+    public PaginatedResult<TItem>? PaginatedResult { get; set; }
+
+    [Parameter]
+    public EventCallback<TableChangedEventArgs> OnTableChanged { get; set; }
+
+    private bool _isSmall { get; set; }
+
+    private int _pageSize { get; set; } = 5;
+
+    private int _currentPage { get; set; } = 1;
+
+    private string? _currentSortColumn { get; set; } = string.Empty;
+
+    private SortDirection _currentSortDirection { get; set; }
+
+    private List<TItem> _selectedItems = [];
+
+    private LLSPagination _pagination = new();
+
+    private List<(string name, string text)> _headers = [];
+
+    protected override void OnInitialized()
+    {
+        var itemType = typeof(TItem);
+
+        var properties = itemType.GetProperties();
+
+        _headers = itemType.GetProperties()
+            .Where(p => p.GetCustomAttribute<DisplayNameAttribute>() != null)
+            .Select(p => (p.Name, p.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? string.Empty))
+            .ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (HandleUrl)
+            {
+                _currentSortColumn = await UrlManager.GetParameterAsync<string>("sc") ?? DefaultSortColumn;
+                _currentSortDirection = await UrlManager.GetParameterAsync<SortDirection?>("sd") ?? DefaultDirection;
+                _currentPage = await UrlManager.GetParameterAsync<int?>("p") ?? 1;
+            }
+            else
+            {
+                _currentSortColumn = DefaultSortColumn;
+                _currentSortDirection = DefaultDirection;
+                _currentPage = 1;
+            }
+        }
+    }    
+
+    public async Task RefreshAsync()
+    {
+        _selectedItems.Clear();
+        await FetchDataAsync();
+    }
+
+    public async Task RemoveAllSelectedAsync(
+        Func<TItem, Task> func, 
+        string singularSuccessMessage = "Registro removido com sucesso.",
+        string pluralSuccessMessage = "registros removidos com sucesso.")
+    {
+        if (_selectedItems.Count == 0) return;
+
+        var result = await new ModalBuilder<LLSDialogRemove>(ModalService)
+            .Set(x => x.Count, _selectedItems.Count)
+            .Compact()
+            .Danger()
+            .ShowAsync();
+
+        if (result.Cancelled) return;
+
+        var successCount = 0;
+
+        LoadingState.Start();
+
+        foreach (var item in _selectedItems)
+        {
+            try
+            {
+                await func(item);
+
+                PaginatedResult?.List.Remove(item);
+
+                successCount++;
+            }
+            catch (Exception ex)
+            {
+                LoadingState.Stop();
+
+                await new ModalBuilder<LLSDialogDanger>(ModalService)
+                    .Set(x => x.Message, ex.Message)
+                    .Compact()
+                    .Danger()
+                    .ShowAsync();
+            }
+        }
+
+        LoadingState.Stop();
+
+        await new ToastBuilder(ToastService).AddAsync(successCount == 1
+            ? singularSuccessMessage
+            : $"{successCount} {pluralSuccessMessage}");
+    }
+
+    public async Task RemoveAsync(Func<Task> func, TItem item, string successMessage = "Registro removido com sucesso.")
+    {
+        var result = await new ModalBuilder<LLSDialogRemove>(ModalService)
+            .Compact()
+            .Danger()
+            .ShowAsync();
+
+        if (result.Cancelled) return;
+
+        try
+        {
+            LoadingState.Start();
+
+            await func();
+
+            LoadingState.Stop();
+
+            PaginatedResult?.List.Remove(item);
+
+            await new ToastBuilder(ToastService).AddAsync(successMessage);
+        }
+        catch (Exception ex)
+        {
+            LoadingState.Stop();
+
+            await new ModalBuilder<LLSDialogDanger>(ModalService)
+                .Set(x => x.Message, ex.Message)
+                .Compact()
+                .Danger()
+                .ShowAsync();
+        }
+    }
+
+    public async Task GoToPageAsync(int pageNumber)
+    {
+        await _pagination.GoToPageAsync(pageNumber);
+    }
+
+    private async Task OnCurrentPageChangedAsync(int currentPage)
+    {
+        _selectedItems.Clear();
+        _currentPage = currentPage;
+
+        await FetchDataAsync();
+    }
+
+    private async Task OnPageSizeChangedAsync(ChangeEventArgs e)
+    {
+        _selectedItems.Clear();
+        _pageSize = Convert.ToInt32(e.Value);
+        await _pagination.GoToPageAsync(1);
+    }
+
+    private async Task OnSortColumnChangedAsync((string sortColumn, SortDirection sortDirection) values)
+    {
+        _currentSortColumn = values.sortColumn;
+        _currentSortDirection = values.sortDirection;
+
+        await FetchDataAsync();
+    }
+
+    private async Task FetchDataAsync()
+    {
+        LoadingState.Start();
+
+        StateHasChanged();
+
+        await OnTableChanged.InvokeAsync(new TableChangedEventArgs
+            {
+                PageNumber = _currentPage,
+                PageSize = _pageSize,
+                SortColumn = _currentSortColumn ?? string.Empty,
+                SortDirection = _currentSortDirection
+            });
+
+        LoadingState.Stop();
+
+        StateHasChanged();
+    }
+
+    private bool? GetSelectAllValue()
+    {
+        if (!_selectedItems.Any()) return false;
+
+        return _selectedItems.Count != PaginatedResult?.List.Count ? null : true;
+    }
+
+    private void ToggleSelectAll()
+    {
+        var selectedAllValue = GetSelectAllValue();
+
+        if (selectedAllValue != true)
+        {
+            _selectedItems = PaginatedResult?.List.ToList() ?? [];
+        }
+        else
+        {
+            _selectedItems.Clear();
+        }
+    }
+
+    private bool IsItemSelected(TItem item)
+    {
+        return _selectedItems.Contains(item);
+    }
+
+    private void ToggleSelectItem(TItem item)
+    {
+        if (_selectedItems.Contains(item))
+        {
+            _selectedItems.Remove(item);
+        }
+        else
+        {
+            _selectedItems.Add(item);
+        }
+    }
+}

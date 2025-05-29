@@ -1,0 +1,28 @@
+﻿@inject IModalService ModalService
+
+<div class="text-center">
+    <Icon class="icon-lg" TextColor="TablerColor.Red" IconType="@TablerIcons.Alert_triangle" />
+    <h3>Atenção</h3>
+    <p class="text-muted">
+        @if (Count > 1)
+        {
+            <span>Deseja realmente remover @Count itens selecionados?</span>
+        }
+        else
+        {
+            <span>Deseja realmente remover?</span>
+        }
+    </p>
+    <div class="mb-2">
+        <Button OnClick="@(() => ModalService.Close(ModalResult.Cancel()))">
+            Não
+        </Button>
+        <Button BackgroundColor="TablerColor.Danger" OnClick="@(() => ModalService.Close(ModalResult.Ok()))">
+            Sim
+        </Button>
+    </div>    
+</div>
+
+@code {
+    [Parameter] public int Count { get; set; }
+}

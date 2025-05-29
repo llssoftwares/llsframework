@@ -1,0 +1,90 @@
+﻿@typeparam TItem
+@inherits TablerBaseComponent
+
+<div class="dropdown autocomplete-input flex-grow-1 @ValidationClasses">
+    <div class="input-icon flex-grow-1 mx-4">
+        <span class="input-icon-addon">
+            <Icon class="icon" IconType="@TablerIcons.Search" />
+        </span>
+        <input @ref="_searchInput"
+               disabled="@Disabled"
+               @attributes="@UnmatchedParameters"
+               @bind="@SearchText"
+               @bind:event="oninput"
+               @onkeyup="HandleKeyupAsync"
+               @onfocus="OnFocusAsync"
+               @onblur="OnBlurTriggeredAsync"
+               @onkeypress:preventDefault
+               placeholder="@Placeholder"
+               autocomplete="off"
+               class="@(Rounded ? "form-control form-control-rounded" : "form-control")" />
+    </div>
+
+    @if (IsShowingSuggestions)
+    {
+        <ClickOutside OnClickOutside="OnClickOutside">
+            <div class="dropdown-menu dropdown-menu-left show dropdown-project">
+                @if (!string.IsNullOrEmpty(ResultHeader))
+                {
+                    <span class="dropdown-header">@ResultHeader</span>
+                }
+
+                @if (GroupBy != null)
+                {
+                    var j = 0;
+                    foreach (var searchGroup in GroupedResult)
+                    {
+                        <span class="dropdown-header">
+                            @if (GroupingHeaderTemplate != null)
+                            {
+                                @GroupingHeaderTemplate(searchGroup.Key)
+                            }
+                            else
+                            {
+                                @GroupingHeaderExpression(searchGroup.Key)
+                            }
+
+                        </span>
+                        var items = searchGroup.ToList();
+                        for (int i = 0; i < items.Count; i++)
+                        {
+                            var item = items[i];
+                            <a @key="item"
+                               class="dropdown-item d-flex clickable @GetSelectedSuggestionClass(item, j)"
+                               @onclick="() => OnItemSelectedCallbackAsync(item)">
+                                @ResultTemplate(item)
+                            </a>
+                            j++;
+                        }
+                    }
+
+                    if (!GroupedResult.Any())
+                    {
+                        <a class="dropdown-item d-flex">
+                            @NotFoundTemplate
+                        </a>
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < Result.Count(); i++)
+                    {
+                        var item = Result[i];
+                        <a @key="item"
+                           class="dropdown-item d-flex clickable @GetSelectedSuggestionClass(item, i)"
+                           @onclick="(_ => OnItemSelectedCallbackAsync(item))">
+                            @ResultTemplate(item)
+                        </a>
+                    }
+
+                    if (LLSSearch<TItem>.SearchTextInAutoCompleteList(SearchText, Result) == false)
+                    {
+                        <a class="dropdown-item d-flex">
+                            @NotFoundTemplate
+                        </a>
+                    }
+                }
+            </div>
+        </ClickOutside>
+    }
+</div>

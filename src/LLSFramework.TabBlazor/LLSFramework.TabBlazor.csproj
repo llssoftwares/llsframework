@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>	
+
+  <ItemGroup>    
+	 <PackageReference Include="BlazorPro.BlazorSize" Version="9.0.0" />
+	 <PackageReference Include="Mediator.Abstractions" Version="2.1.7" />
+	 <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.3" />
+	 <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.5" />
+	 <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="9.0.3" />
+	 <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+	 <PackageReference Include="TabBlazor" Version="0.14.42-beta" />
+	 <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.4" />
+  </ItemGroup>	
+
+  <ItemGroup>
+    <ProjectReference Include="..\LLSFramework.Application\LLSFramework.Application.csproj" />
+    <ProjectReference Include="..\LLSFramework.Core\LLSFramework.Core.csproj" />
+  </ItemGroup>
+
+</Project>

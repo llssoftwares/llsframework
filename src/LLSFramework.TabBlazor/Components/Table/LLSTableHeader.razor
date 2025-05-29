@@ -1,0 +1,61 @@
+﻿@inject UrlManager UrlManager
+
+<th class="@Class cursor-pointer" @onclick="SortColumnAsync">
+    @ColumnText <Icon IconType="_icon" Size="15"></Icon>
+</th>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ColumnName { get; set; } = string.Empty;
+
+    [Parameter]
+    public string ColumnText { get; set; } = string.Empty;
+
+    [Parameter]
+    public string CurrentSortColumn { get; set; } = string.Empty;
+
+    [Parameter]
+    public SortDirection CurrentSortDirection { get; set; }
+
+    [Parameter]
+    public EventCallback<(string, SortDirection)> OnSortColumnChanged { get; set; }
+
+    [Parameter]
+    public bool HandleUrl { get; set; }
+
+    private IIconType _icon => CurrentSortColumn == ColumnName
+        ? CurrentSortDirection == SortDirection.Ascending
+            ? TablerIcons.Chevron_up
+            : TablerIcons.Chevron_down
+        : TablerIcons.Selector;
+
+    private async Task SortColumnAsync()
+    {
+        var prevSortColumn = CurrentSortColumn;
+
+        CurrentSortColumn = ColumnName;
+
+        if (prevSortColumn != ColumnName)
+        {
+            CurrentSortDirection = SortDirection.Ascending;
+        }
+        else
+        {
+            CurrentSortDirection = CurrentSortDirection == SortDirection.Ascending
+                ? SortDirection.Descending
+                : SortDirection.Ascending;
+        }
+
+        if (HandleUrl)
+        {
+            await UrlManager.AddParametersAsync(
+                ("sc", CurrentSortColumn),
+                ("sd", CurrentSortDirection));
+        }
+
+        await OnSortColumnChanged.InvokeAsync(new(CurrentSortColumn, CurrentSortDirection));
+    }
+}

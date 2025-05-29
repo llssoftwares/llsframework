@@ -1,0 +1,32 @@
+﻿@typeparam TValue where TValue : Enum
+@inherits InputBase<List<TValue>>
+
+<div class="form-control">
+    <ItemSelect 
+        MultiSelect 
+        ShowCheckBoxes
+        NoSelectedText="@EmptyText" 
+        Items="EnumList" 
+        SelectedTextExpression="e => e.GetDescription()" 
+        @bind-SelectedValues="CurrentValue">
+        <ListTemplate>
+            @context.GetDescription()
+        </ListTemplate>
+    </ItemSelect>
+</div>
+
+@code {
+    [Parameter] public List<TValue> EnumList { get; set; } = new List<TValue>();
+
+    [Parameter] public string? EmptyText { get; set; }
+
+    protected override void OnInitialized()
+    {
+        EnumList = Enum.GetValues(typeof(TValue)).Cast<TValue>().ToList();
+    }
+
+    protected override bool TryParseValueFromString(string? value, out List<TValue> result, out string validationErrorMessage)
+    {
+        throw new NotImplementedException();
+    }
+}

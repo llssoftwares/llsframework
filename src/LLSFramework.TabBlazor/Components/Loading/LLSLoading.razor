@@ -1,0 +1,10 @@
+﻿@inject LoadingState LoadingState
+
+<Dimmer Active="LoadingState.IsLoading">
+    @ChildContent
+</Dimmer>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
