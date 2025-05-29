@@ -14,9 +14,9 @@ public abstract class ValueObject
     /// <returns>True if both value objects are equal; otherwise, false.</returns>
     protected static bool EqualOperator(ValueObject left, ValueObject right)
     {
-        return left is not null
-            && right is not null
-            && (ReferenceEquals(left, right) || left.Equals(right));
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.Equals(right);
     }
 
     /// <summary>
@@ -58,8 +58,7 @@ public abstract class ValueObject
     public override int GetHashCode()
     {
         return GetEqualityComponents()
-            .Select(x => x != null ? x.GetHashCode() : 0)
-            .Aggregate((x, y) => x ^ y);
+            .Aggregate(1, (current, obj) => current * 23 + (obj?.GetHashCode() ?? 0));
     }
 
     /// <summary>

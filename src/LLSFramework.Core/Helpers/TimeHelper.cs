@@ -1,4 +1,4 @@
-﻿namespace LLSFramework.Core;
+﻿namespace LLSFramework.Core.Helpers;
 
 /// <summary>
 /// Provides helper methods for working with time-related operations.

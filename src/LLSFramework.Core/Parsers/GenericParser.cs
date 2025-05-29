@@ -1,4 +1,4 @@
-﻿namespace LLSFramework.Core;
+﻿namespace LLSFramework.Core.Parsers;
 
 /// <summary>
 /// Provides generic parsing utilities for converting string values to various types, including primitives, enums, and collections.
