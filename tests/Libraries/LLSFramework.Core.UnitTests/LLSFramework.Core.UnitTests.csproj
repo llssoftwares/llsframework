@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LLSFramework.Core\LLSFramework.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\Libraries\LLSFramework.Core\LLSFramework.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
